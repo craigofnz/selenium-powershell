@@ -552,3 +552,14 @@ function Switch-SeWindow {
         $Driver.SwitchTo().Window($Window)|Out-Null
     }   
 }
+
+<# 
+   Extra functions by https://github.com/craigofnz - not yet PR'd to https://github.com/adamdriscoll/selenium-powershell
+#>
+
+Get-ChildItem "$PSScriptRoot\functions\*.ps1" | ForEach-Object `
+{ 
+    # Dot source function into scope
+    . $_.FullName
+    Export-ModuleMember -Function $_.BaseName
+}
