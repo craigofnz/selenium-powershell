@@ -252,23 +252,37 @@ function Start-SeFirefox {
 }
 
 function Stop-SeDriver {
-    param($Driver) 
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver
+    )
 
     $Driver.Dispose()
 }
 
 function Enter-SeUrl {
-    param($Driver, $Url)
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver,
+
+        $Url #TODO
+    )
 
     $Driver.Navigate().GoToUrl($Url)
 }
 
 function Find-SeElement {
     param(
-        [Parameter()]
+        [Parameter(ValueFromPipeline = $true)]
+        [OpenQA.Selenium.IWebDriver]
         $Driver,
-        [Parameter()]
+
+        [Parameter(ValueFromPipeLine = $true)]
+        [OpenQA.Selenium.IWebElement]
         $Element,
+        
         [Parameter()][Switch]$Wait,
         [Parameter()]$Timeout = 30,
         [Parameter(ParameterSetName = "ByCss")]
@@ -403,24 +417,40 @@ function Get-SeKeys {
 }
 
 function Send-SeKeys {
-    param([OpenQA.Selenium.IWebElement]$Element, [string]$Keys)
+    param(
+        [Parameter(ValueFromPipeLine = $true, Mandatory = $true)]
+        [OpenQA.Selenium.IWebElement]
+        $Element,
+
+        [string]$Keys)
     
     foreach ($Key in @(Get-SeKeys).Name) {
         $Keys = $Keys -replace "{{$Key}}", [OpenQA.Selenium.Keys]::$Key
     }
     
     $Element.SendKeys($Keys)
+
+    # return element, so pipeline can contine
+    $Element
 }
 
 function Get-SeCookie {
-    param($Driver)
+    param(
+        [Parameter(ValueFromPipeline = $true)]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver
+    )
 
     $Driver.Manage().Cookies.AllCookies.GetEnumerator()
 }
 
 function Remove-SeCookie {
     param(
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [OpenQA.Selenium.IWebDriver]
         $Driver,
+
+        [Parameter(Mandatory = $false)]
         [switch]$DeleteAllCookies,
         [string]$Name
     )
@@ -435,7 +465,12 @@ function Remove-SeCookie {
 
 function Set-SeCookie {
     param(
-        [ValidateNotNull()]$Driver, 
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [ValidateNotNull()]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver,
+
+        [Parameter(Mandatory = $false)]
         [string]$Name,
         [string]$Value,
         [string]$Path,
@@ -507,7 +542,15 @@ function Get-SeElementAttribute {
 }
 
 function Invoke-SeScreenshot {
-    param($Driver, [Switch]$AsBase64EncodedString)
+    param(
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [ValidateNotNull()]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver,
+
+        [Parameter(Mandatory = $false)]
+        [Switch]$AsBase64EncodedString
+    )
 
     $Screenshot = [OpenQA.Selenium.Support.Extensions.WebDriverExtensions]::TakeScreenshot($Driver)
     if ($AsBase64EncodedString) {
@@ -534,7 +577,10 @@ function Save-SeScreenshot {
 
 function Get-SeWindow {
     param(
-        [Parameter(Mandatory = $true)][OpenQA.Selenium.IWebDriver]$Driver
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [ValidateNotNull()]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver
     )
 
     Process {
@@ -544,7 +590,11 @@ function Get-SeWindow {
 
 function Switch-SeWindow {
     param(
-        [Parameter(Mandatory = $true)][OpenQA.Selenium.IWebDriver]$Driver,
+        [Parameter(ValueFromPipeline = $true, Mandatory = $true)]
+        [ValidateNotNull()]
+        [OpenQA.Selenium.IWebDriver]
+        $Driver,
+        
         [Parameter(Mandatory = $true)]$Window
     )
 

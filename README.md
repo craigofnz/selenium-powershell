@@ -106,6 +106,15 @@ Find-SeElement -Driver $d -Wait -Timeout 10 -Css input[name='q']
 Find-SeElement -Driver $d -Wait -Timeout 10 -Name q 
 ```
 
+## Performing steps using Powershell Pipelines
+
+```powershell
+$Driver = Start-SeChrome
+$Driver | Enter-SeUrl -url 'https://www.google.com'
+$Driver | Find-SeElement -ClassName 'SDkEP' | Find-SeElement -Name 'q' | Send-SeKeys -Keys 'Powershell-Selenium' | Send-SeKeys -Keys ([OpenQA.Selenium.Keys]::Enter)
+$Driver | Stop-SeDriver
+```
+
 # Maintainers 
 
 - [Adam Driscoll](https://github.com/adamdriscoll)
