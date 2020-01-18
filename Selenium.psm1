@@ -409,6 +409,8 @@ function Invoke-SeClick {
         $Element.Click()
     }
 
+    # return element back to pipeline
+    $Element
 }
 
 function Get-SeKeys {
