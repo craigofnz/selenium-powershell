@@ -611,5 +611,5 @@ Get-ChildItem "$PSScriptRoot\functions\*.ps1" | ForEach-Object `
 { 
     # Dot source function into scope
     . $_.FullName
-    Export-ModuleMember -Function $_.BaseName
+    # Export-ModuleMember -Function $_.BaseName
 }
