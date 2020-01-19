@@ -515,7 +515,7 @@ function Stop-SeDriver {
     [alias('SeClose')]
     param(
         [Parameter(ValueFromPipeline=$true, position=0,ParameterSetName='Driver')]
-        [ValidateIsWebDriverAttribute()]
+        [OpenQA.Selenium.IWebDriver]
         $Driver,
         [Parameter(Mandatory=$true, ParameterSetName='Default')]
         [switch]$Default
@@ -688,6 +688,7 @@ function Get-SeElement {
         #The driver or Element where the search should be performed.
         [Parameter(Position=3,ValueFromPipeline=$true)]
         [Alias('Element','Driver')]
+        [PSObject]
         $Target = $Global:SeDriver,
 
         [parameter(DontShow)]
@@ -705,14 +706,14 @@ function Get-SeElement {
         }
         if($wait -and $Timeout -eq 0) {$Timeout = 30 }
 
-        if($TimeOut -and $Target -is [OpenQA.Selenium.Remote.RemoteWebDriver]) {
+        if($TimeOut -and $Target -is [OpenQA.Selenium.IWebDriver]) {
             $TargetElement = [OpenQA.Selenium.By]::$By($Selection)
             $WebDriverWait = New-Object -TypeName OpenQA.Selenium.Support.UI.WebDriverWait -ArgumentList $Target, (New-TimeSpan -Seconds $Timeout)
             $Condition     = [OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists($TargetElement)
             $WebDriverWait.Until($Condition)
         }
-        elseif($Target -is [OpenQA.Selenium.Remote.RemoteWebElement] -or
-               $Target -is [OpenQA.Selenium.Remote.RemoteWebDriver]) {
+        elseif($Target -is [OpenQA.Selenium.IWebElement] -or
+               $Target -is [OpenQA.Selenium.IWebDriver]) {
             if($Timeout) {Write-Warning "Timeout does not apply when searching an Element"}
             $Target.FindElements([OpenQA.Selenium.By]::$By($Selection))
         }
@@ -720,27 +721,8 @@ function Get-SeElement {
     }
 }
 
-function Invoke-SeClick {
-    param(
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
-        [OpenQA.Selenium.IWebElement]$Element,
-        [Parameter()]
-        [Switch]$JavaScriptClick,
-        [Parameter()]
-        $Driver
-    )
-
-    if($JavaScriptClick) {
-        $Driver.ExecuteScript("arguments[0].click()", $Element)
-    }
-    else {
-        $Element.Click()
-    }
-
-}
-
-function Send-SeClick {
-    [alias('SeClick')]
+function Send-SeClick {        
+    [alias('SeClick','Invoke-SeClick')]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true,Position=0)]
         [OpenQA.Selenium.IWebElement]$Element,
@@ -769,16 +751,21 @@ function Send-SeKeys {
         [Parameter(Mandatory=$true,Position=0,ValueFromPipeline=$true)]
         [OpenQA.Selenium.IWebElement]$Element,
         [Parameter(Mandatory=$true,Position=1)]
-        [string]$Keys
+        [string]$Keys,
+        [Parameter()]
+        [Alias('PT')]
+        [switch]$PassThru
     )
     foreach ($Key in $Script:SeKeys.Name) {
         $Keys = $Keys -replace "{{$Key}}", [OpenQA.Selenium.Keys]::$Key
     }
     $Element.SendKeys($Keys)
+    if($PassThru) { $Element }
 }
 
 function Get-SeCookie {
     param(
+        [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
         [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
         $Target = $Global:SeDriver
@@ -788,8 +775,16 @@ function Get-SeCookie {
 
 function Remove-SeCookie {
     param(
-        $Driver,
+        [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
+        [Alias('Driver')]
+        [ValidateIsWebDriverAttribute()]
+        $Target = $Global:SeDriver,
+        
+        [Parameter(Mandatory=$true, ParameterSetName='DeleteAllCookies')]
+        [Alias('Purge')]
         [switch]$DeleteAllCookies,
+
+        [Parameter(Mandatory=$true, ParameterSetName='NamedCookie')]        
         [string]$Name
     )
 
@@ -809,6 +804,8 @@ function Set-SeCookie {
         [string]$Path,
         [string]$Domain,
         $ExpiryDate,
+
+        [Parameter(ValueFromPipeline = $true)]
         [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
         $Target = $Global:SeDriver
@@ -878,9 +875,12 @@ function Get-SeElementAttribute {
 
 function Invoke-SeScreenshot {
     param(
+        [Parameter(ValueFromPipeline=$true)]
         [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
         $Target = $Global:SeDriver,
+
+        [Parameter(Mandatory = $false)]
         [Switch]$AsBase64EncodedString
     )
     $Screenshot = [OpenQA.Selenium.Support.Extensions.WebDriverExtensions]::TakeScreenshot($Target)
@@ -906,7 +906,9 @@ function Save-SeScreenshot {
     }
 }
 
-function New-SeScreenshot {
+# Q. If this is using New- shouldn't it __always__ return this new object?
+# Should this be integrate with the existing Invoke-SeScreenshot?
+function New-SeScreenshot {    
     [Alias('SeScreenshot')]
     [cmdletbinding(DefaultParameterSetName='Path')]
     param(
@@ -918,9 +920,10 @@ function New-SeScreenshot {
         [Parameter(ParameterSetName='PassThru',Position=1)]
         [OpenQA.Selenium.ScreenshotImageFormat]$ImageFormat = [OpenQA.Selenium.ScreenshotImageFormat]::Png,
 
+        [Parameter(ValueFromPipeline=$true)]
         [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
-        $Target = $Global:SeDriver ,
+        $Target = $Global:SeDriver,
 
         [Parameter(ParameterSetName='Base64',  Mandatory=$true)]
         [Switch]$AsBase64EncodedString,
@@ -934,12 +937,12 @@ function New-SeScreenshot {
     elseif($Path)              {
         $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
         $Screenshot.SaveAsFile($Path, $ImageFormat) }
-    if($Passthru)              {$Screenshot}
+    if($Passthru)              {$Screenshot} 
 }
 
 function Get-SeWindow {
     param(
-        [Parameter(Mandatory = $true)][OpenQA.Selenium.IWebDriver]$Driver
+        [Parameter(Mandatory = $true,ValueFromPipeline=$true)][OpenQA.Selenium.IWebDriver]$Driver
     )
 
     process {
@@ -961,13 +964,24 @@ function Switch-SeWindow {
 function Switch-SeFrame {
     [Alias('SeFrame')]
     param (
+        [Parameter(Mandatory = $true, ParameterSetName='Frame')]
         $Frame,
+
+        [Parameter(Mandatory = $true, ParameterSetName='Parent')]
         [switch]$Parent,
+
+        [Parameter(Mandatory = $true, ParameterSetName='Root')]
+        [Alias('defaultContent')]
+        [switch]$Root,
+
+        [Parameter(ValueFromPipeline=$true)]
+        [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
         $Target = $Global:SeDriver
     )
     if     ($frame)  {[void]$Target.SwitchTo().Frame($Frame) }
     elseif ($Parent) {[void]$Target.SwitchTo().ParentFrame()}
+    elseif ($Root)   {[void]$Target.SwitchTo().defaultContent() }
 }
 
 function Clear-SeAlert {
@@ -1032,6 +1046,7 @@ function SeOpen {
     if ($SleepSeconds) {Start-Sleep -Seconds $SleepSeconds}
 }`
 
+# should these changes be integrated into Send-SeKeys and aliased to SeType?
 function SeType {
     param(
         [Parameter(Mandatory=$true,Position=0)]
