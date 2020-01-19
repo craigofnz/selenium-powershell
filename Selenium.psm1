@@ -515,7 +515,7 @@ function Stop-SeDriver {
     [alias('SeClose')]
     param(
         [Parameter(ValueFromPipeline=$true, position=0,ParameterSetName='Driver')]
-        [OpenQA.Selenium.IWebDriver]
+        [ValidateIsWebDriverAttribute()]
         $Driver,
         [Parameter(Mandatory=$true, ParameterSetName='Default')]
         [switch]$Default
@@ -687,8 +687,7 @@ function Get-SeElement {
         [Int]$Timeout = 0,
         #The driver or Element where the search should be performed.
         [Parameter(Position=3,ValueFromPipeline=$true)]
-        [Alias('Element','Driver')]
-        [PSObject]
+        [Alias('Element','Driver')]        
         $Target = $Global:SeDriver,
 
         [parameter(DontShow)]
@@ -706,17 +705,17 @@ function Get-SeElement {
         }
         if($wait -and $Timeout -eq 0) {$Timeout = 30 }
 
-        if($TimeOut -and $Target -is [OpenQA.Selenium.IWebDriver]) {
+        if($TimeOut -and $Target -is [OpenQA.Selenium.Remote.RemoteWebDriver]) {
             $TargetElement = [OpenQA.Selenium.By]::$By($Selection)
             $WebDriverWait = New-Object -TypeName OpenQA.Selenium.Support.UI.WebDriverWait -ArgumentList $Target, (New-TimeSpan -Seconds $Timeout)
             $Condition     = [OpenQA.Selenium.Support.UI.ExpectedConditions]::ElementExists($TargetElement)
             $WebDriverWait.Until($Condition)
         }
-        elseif($Target -is [OpenQA.Selenium.IWebElement] -or
-               $Target -is [OpenQA.Selenium.IWebDriver]) {
+        elseif($Target -is [OpenQA.Selenium.Remote.RemoteWebElement] -or
+               $Target -is [OpenQA.Selenium.Remote.RemoteWebDriver]) {
             if($Timeout) {Write-Warning "Timeout does not apply when searching an Element"}
             $Target.FindElements([OpenQA.Selenium.By]::$By($Selection))
-        }
+        }        
         else {throw "No valid target was provided."}
     }
 }
@@ -728,7 +727,7 @@ function Send-SeClick {
         [OpenQA.Selenium.IWebElement]$Element,
         [Alias('JS')]
         [Switch]$JavaScriptClick,
-        $SleepSeconds = 0 ,
+        $SleepSeconds = 0,
         [Parameter(DontShow)]
         $Driver,
         [Alias('PT')]
