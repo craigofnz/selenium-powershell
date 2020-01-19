@@ -719,7 +719,26 @@ function Get-SeElement {
         else {throw "No valid target was provided."}
     }
 }
+<#
+function Invoke-SeClick {
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [OpenQA.Selenium.IWebElement]$Element,
+        [Parameter()]
+        [Switch]$JavaScriptClick,
+        [Parameter()]
+        $Driver
+    )
 
+    if($JavaScriptClick) {
+        $Driver.ExecuteScript("arguments[0].click()", $Element)
+    }
+    else {
+        $Element.Click()
+    }
+
+}
+#>
 function Send-SeClick {        
     [alias('SeClick','Invoke-SeClick')]
     param(
@@ -727,7 +746,7 @@ function Send-SeClick {
         [OpenQA.Selenium.IWebElement]$Element,
         [Alias('JS')]
         [Switch]$JavaScriptClick,
-        $SleepSeconds = 0,
+        $SleepSeconds = 0 ,
         [Parameter(DontShow)]
         $Driver,
         [Alias('PT')]
@@ -922,7 +941,7 @@ function New-SeScreenshot {
         [Parameter(ValueFromPipeline=$true)]
         [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
-        $Target = $Global:SeDriver,
+        $Target = $Global:SeDriver ,
 
         [Parameter(ParameterSetName='Base64',  Mandatory=$true)]
         [Switch]$AsBase64EncodedString,
