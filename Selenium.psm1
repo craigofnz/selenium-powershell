@@ -511,6 +511,7 @@ function Start-SeRemote {
         else {$Driver}
     }
 
+<# @jhoneill Shouldn't -default be assumed if not feed a webdriver? see alternate below
 function Stop-SeDriver {
     [alias('SeClose')]
     param(
@@ -532,6 +533,26 @@ function Stop-SeDriver {
     }
     else {Write-Warning -Message 'No Driver Specified'}
 }
+#>
+function Stop-SeDriver {    
+    [alias('SeClose')]
+    param(
+        [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
+        [Alias('Driver')]
+        [ValidateNotNullOrEmpty()]
+        [OpenQA.Selenium.IWebDriver]
+        $Target = $Global:SeDriver
+    )
+
+    if (  ($null -ne $Target) -and ($Target -is [OpenQA.Selenium.IWebDriver])  )
+    {
+        Write-Verbose -Message "Closing $($Target.Capabilities.browsername)..."
+        $Target.Close()
+        $Target.Dispose()
+        if ($Target -eq $Global:SeDriver) { Remove-Variable -Name SeDriver -Scope global }
+    }
+    else { throw "A valid <IWebDriver> Target must be provided." }
+}
 
 <#function Enter-SeUrl {
     param($Driver, $Url)
@@ -543,17 +564,34 @@ function Open-SeUrl {
     [cmdletbinding(DefaultParameterSetName='default')]
     [Alias('SeNavigate',"Enter-SeUrl")]
     param(
-        [Parameter(Mandatory=$true, position=0,ParameterSetName='default')]
+        [Parameter(Mandatory=$true, position=0,ParameterSetName='url')]
         [ValidateURIAttribute()]
         [string]$Url,
+
+        [Parameter(Mandatory=$true,ParameterSetName='back')]
+        [switch]$Back,
+
+        [Parameter(Mandatory=$true,ParameterSetName='forward')]
+        [switch]$Forward,
+
+        [Parameter(Mandatory=$true,ParameterSetName='refresh')]
+        [switch]$Refresh,
+
+        [Parameter(ValueFromPipeline=$true)]
         [Alias("Driver")]
         [ValidateIsWebDriverAttribute()]
-        $Target = $Global:SeDriver,
-        [Parameter(Mandatory=$true,ParameterSetName='back')]
-        [switch]$Back
+        $Target = $Global:SeDriver
     )
-    if($Back) {$Target.Navigate().Back()}
-    else      {$Target.Navigate().GoToUrl($Url)}
+
+    switch ($PSCmdlet.ParameterSetName)
+    {
+        'url'     { $Target.Navigate().GoToUrl($Url); break }
+        'back'    { $Target.Navigate().Back();        break }
+        'forward' { $Target.Navigate().Forward();     break }
+        'refresh' { $Target.Navigate().Refresh();     break }
+
+        default   { throw 'Unexpected ParameterSet' }
+    }
 }
 
 <#function Find-SeElement {
@@ -795,7 +833,7 @@ function Remove-SeCookie {
     param(
         [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
         [Alias('Driver')]
-        [ValidateIsWebDriverAttribute()]
+        [OpenQA.Selenium.IWebDriver]
         $Target = $Global:SeDriver,
         
         [Parameter(Mandatory=$true, ParameterSetName='DeleteAllCookies')]
@@ -807,10 +845,10 @@ function Remove-SeCookie {
     )
 
     if($DeleteAllCookies){
-        $Driver.Manage().Cookies.DeleteAllCookies()
+        $Target.Manage().Cookies.DeleteAllCookies()
     }
     else{
-        $Driver.Manage().Cookies.DeleteCookieNamed($Name)
+        $Target.Manage().Cookies.DeleteCookieNamed($Name)
     }
 }
 
@@ -856,7 +894,7 @@ function Set-SeCookie {
             $cookie = New-Object -TypeName OpenQA.Selenium.Cookie -ArgumentList $Name,$Value,$Path,$ExpiryDate
         }
         Elseif($Name -and $Value -and $Path -and $Domain -and (!$ExpiryDate -or $ExpiryDate)){
-            if($Driver.Url -match $Domain){
+            if($Target.Url -match $Domain){
                 $cookie = New-Object -TypeName OpenQA.Selenium.Cookie -ArgumentList $Name,$Value,$Domain,$Path,$ExpiryDate
             }
             else{
@@ -875,7 +913,7 @@ function Set-SeCookie {
             Initializes a new instance of the Cookie class with a specific name, value, domain, path and expiration date."
         }
 
-        $Driver.Manage().Cookies.AddCookie($cookie)
+        $Target.Manage().Cookies.AddCookie($cookie)
     }
 }
 
@@ -960,22 +998,29 @@ function New-SeScreenshot {
 
 function Get-SeWindow {
     param(
-        [Parameter(Mandatory = $true,ValueFromPipeline=$true)][OpenQA.Selenium.IWebDriver]$Driver
+        [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
+        [Alias('Driver')]
+        [OpenQA.Selenium.IWebDriver]
+        $Target = $Global:SeDriver
     )
 
     process {
-        $Driver.WindowHandles
+        $Target.WindowHandles
     }
 }
 
 function Switch-SeWindow {
-    param(
-        [Parameter(Mandatory = $true)][OpenQA.Selenium.IWebDriver]$Driver,
+    param(        
+        [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
+        [Alias('Driver')]
+        [OpenQA.Selenium.IWebDriver]
+        $Target = $Global:SeDriver,
+
         [Parameter(Mandatory = $true)]$Window
     )
 
     process {
-        $Driver.SwitchTo().Window($Window)|Out-Null
+        $Target.SwitchTo().Window($Window)|Out-Null
     }
 }
 
@@ -997,6 +1042,7 @@ function Switch-SeFrame {
         [ValidateIsWebDriverAttribute()]
         $Target = $Global:SeDriver
     )
+    
     if     ($frame)  {[void]$Target.SwitchTo().Frame($Frame) }
     elseif ($Parent) {[void]$Target.SwitchTo().ParentFrame()}
     elseif ($Root)   {[void]$Target.SwitchTo().defaultContent() }
