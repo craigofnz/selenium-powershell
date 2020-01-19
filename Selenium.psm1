@@ -725,7 +725,7 @@ function Get-SeElement {
         [Int]$Timeout = 0,
         #The driver or Element where the search should be performed.
         [Parameter(Position=3,ValueFromPipeline=$true)]
-        [Alias('Element','Driver')]        
+        [Alias('Element','Driver')]
         $Target = $Global:SeDriver,
 
         [parameter(DontShow)]
@@ -753,7 +753,7 @@ function Get-SeElement {
                $Target -is [OpenQA.Selenium.Remote.RemoteWebDriver]) {
             if($Timeout) {Write-Warning "Timeout does not apply when searching an Element"}
             $Target.FindElements([OpenQA.Selenium.By]::$By($Selection))
-        }        
+        }
         else {throw "No valid target was provided."}
     }
 }
@@ -777,7 +777,7 @@ function Invoke-SeClick {
 
 }
 #>
-function Send-SeClick {        
+function Send-SeClick {
     [alias('SeClick','Invoke-SeClick')]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true,Position=0)]
@@ -993,7 +993,7 @@ function New-SeScreenshot {
     elseif($Path)              {
         $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
         $Screenshot.SaveAsFile($Path, $ImageFormat) }
-    if($Passthru)              {$Screenshot} 
+    if($Passthru)              {$Screenshot}
 }
 
 function Get-SeWindow {
