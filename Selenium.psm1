@@ -882,7 +882,7 @@ function Get-SeElementAttributes
     .SYNOPSIS
     For a given <IWebElement>$Element, return a hashtable containing all of it's attributes 
     .EXAMPLE
-    $WebDriver | Get-SeElementAttributes -By XPath "//input[@id='user[login]']" | Get-SeAttributes
+    $WebDriver | Get-SeElement -By XPath "//input[@id='user[login]']" | Get-SeElementAttributes
     #>
 
     [CmdletBinding()]
