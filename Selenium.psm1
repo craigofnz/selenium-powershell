@@ -35,7 +35,7 @@ function ValidateURL {
     [uri]::TryCreate($URL,[System.UriKind]::Absolute, [ref]$Out)
 }
 
-function Enable-PassThru
+function Enable-SePassThru
 {
     <#
     .SYNOPSIS
@@ -45,7 +45,7 @@ function Enable-PassThru
     $Script:PassThruByDefault = $true
 }
 
-function Disable-PassThru
+function Disable-SePassThru
 {
     <#
     .SYNOPSIS
