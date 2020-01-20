@@ -1,3 +1,43 @@
+# IT'S FORKED!
+
+This is a fork of the module managed by Adam Driscoll that I am using to both test and use in anger new features for the module.
+
+__Please note:__ the **stable** 2.x branch is available from Powershell Gallery and is currently at version 2.3.1.
+```powershell
+Install-Module -Repository PSGallery -Name Selenium -MaximumVersion 2.8.0 -Scope CurentUser -Verbose
+```
+
+This repo is based on contribtions going into a future 3.x module release but may include my own experiments and use-cases that are not in that code.
+It is my hope that 3.x will allow for interacting with Selenium in more Powershell natural way, as well as providing familiar function names for those that have used Selenium with different language bindings.
+The committed 3.x code is in [master](https://github.com/adamdriscoll/selenium-powershell.git)
+
+In general, my changes and experiments are drafted from [master](https://github.com/adamdriscoll/selenium-powershell.git) and then merged forward into [fork/3/selenium-powershell](https://github.com/craigofnz/selenium-powershell.git) so that after successful use in anger they can be merged back to [master](https://github.com/adamdriscoll/selenium-powershell.git)
+
+| Feature               | [fork/3/](https://github.com/craigofnz/selenium-powershell.git))       | PR         | [master](https://github.com/adamdriscoll/selenium-powershell.git) |
+| --------------------- | ------------ | ---------- | --------- |
+| Powershell Piplinging | Integrated   | 2020-01-20 | _Pending_ |
+| GetAttributes         | Integrated   |            |           |
+| Select-SeWindow       | Integrated   |            |           | 
+| PassThru Defaults     | _In Progress_|            |           |
+| WinAppDriver          | Not Started  |            |           |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+
 # Selenium PowerShell Module
 
 - Wraps the C# WebDriver for Selenium
