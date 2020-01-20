@@ -778,7 +778,7 @@ function Invoke-SeClick {
 }
 
 function Send-SeClick {
-    [alias('SeClick','Invoke-SeClick')]
+    [alias('SeClick')]
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true,Position=0)]
         [OpenQA.Selenium.IWebElement]$Element,
@@ -962,7 +962,7 @@ function Save-SeScreenshot {
     }
 }
 
-function New-SeScreenshot {    
+function New-SeScreenshot {
     [Alias('SeScreenshot')]
     [cmdletbinding(DefaultParameterSetName='Path')]
     param(
