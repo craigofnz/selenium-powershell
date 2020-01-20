@@ -137,6 +137,10 @@ Drives pester tests as a single command See examples for details, but allows thi
     which can be shortened to
     seShouldHave $linkpath text -Like "*selenium*"
 
+Get-SeElementAttributes **New Function**
+  Returns <hashtable> containing all attributes for a given <IWebElement>
+  
+
 Added some new examples - showing DSL style in Pester.
 
 Reorder PSD file for easy reading & add file list.

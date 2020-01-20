@@ -876,6 +876,35 @@ function Get-SeElementAttribute {
     }
 }
 
+function Get-SeElementAttributes
+{
+    <# 
+    .SYNOPSIS
+    For a given <IWebElement>$Element, return a hashtable containing all of it's attributes 
+    .EXAMPLE
+    $WebDriver | Get-SeElementAttributes -By XPath "//input[@id='user[login]']" | Get-SeAttributes
+    #>
+
+    [CmdletBinding()]
+    [OutputType([hashtable])]
+    param(
+        [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
+        [ValidateNotNullOrEmpty()]
+        [OpenQA.Selenium.IWebElement]
+        $Element        
+    )
+
+    $local:js = @"
+      var attrs = {};
+      for (i=0; i<arguments[0].attributes.length; ++i) {
+        attrs[arguments[0].attributes[i].name] = arguments[0].attributes[i].value
+      };
+      return attrs;
+"@
+
+    [hashtable]$Element.WrappedDriver.ExecuteScript($local:js, $Element)
+}
+
 function Invoke-SeScreenshot {
     param(
         [Alias("Driver")]
