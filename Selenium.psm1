@@ -757,7 +757,7 @@ function Get-SeElement {
         else {throw "No valid target was provided."}
     }
 }
-<#
+
 function Invoke-SeClick {
     param(
         [Parameter(Mandatory = $true, ValueFromPipeline = $true)]
@@ -776,7 +776,7 @@ function Invoke-SeClick {
     }
 
 }
-#>
+
 function Send-SeClick {
     [alias('SeClick','Invoke-SeClick')]
     param(
@@ -962,8 +962,6 @@ function Save-SeScreenshot {
     }
 }
 
-# Q. If this is using New- shouldn't it __always__ return this new object?
-# Should this be integrate with the existing Invoke-SeScreenshot?
 function New-SeScreenshot {    
     [Alias('SeScreenshot')]
     [cmdletbinding(DefaultParameterSetName='Path')]
@@ -1110,7 +1108,6 @@ function SeOpen {
     if ($SleepSeconds) {Start-Sleep -Seconds $SleepSeconds}
 }`
 
-# should these changes be integrated into Send-SeKeys and aliased to SeType?
 function SeType {
     param(
         [Parameter(Mandatory=$true,Position=0)]
