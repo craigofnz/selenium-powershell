@@ -1,6 +1,8 @@
  $Script:SeKeys = [OpenQA.Selenium.Keys] | Get-Member -MemberType Property -Static  |
         Select-Object -Property Name, @{N = "ObjectString"; E = { "[OpenQA.Selenium.Keys]::$($_.Name)" } }
 
+$Script:PassThruByDefault = $false
+
 #region Set path to assemblies on Linux and MacOS and Grant Execution permissions on them
 if($IsLinux){
     $AssembliesPath = "$PSScriptRoot/assemblies/linux"
@@ -31,6 +33,26 @@ function ValidateURL {
     )
     $Out = $null
     [uri]::TryCreate($URL,[System.UriKind]::Absolute, [ref]$Out)
+}
+
+function Enable-PassThru
+{
+    <#
+    .SYNOPSIS
+    Enables PassThru mode by default for all functions in the Selenium module that support -PassThru
+    #>
+    Write-Verbose "$($MyInvocation.MyCommand): Changing PassThruByDefault from '$Script:PassThruByDefault' to '$true'"
+    $Script:PassThruByDefault = $true
+}
+
+function Disable-PassThru
+{
+    <#
+    .SYNOPSIS
+    Disables PassThru mode by default for all functions in the Selenium module that support -PassThru
+    #>
+    Write-Verbose "$($MyInvocation.MyCommand): Changing PassThruByDefault from '$Script:PassThruByDefault' to '$false'"
+    $Script:PassThruByDefault = $false
 }
 
 function Start-SeNewEdge {
@@ -793,8 +815,10 @@ function Send-SeClick {
     Process {
         if($JavaScriptClick) { $Element.WrappedDriver.ExecuteScript("arguments[0].click()", $Element) }
         else                 { $Element.Click() }
+
         if($SleepSeconds)    { Start-Sleep -Seconds $SleepSeconds}
-        if($PassThru)        { $Element}
+
+        if($PassThru -or $Script:PassThruByDefault)  { $Element }
     }
 }
 
@@ -1020,7 +1044,8 @@ function New-SeScreenshot {
     elseif($Path)              {
         $Path = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Path)
         $Screenshot.SaveAsFile($Path, $ImageFormat) }
-    if($Passthru)              {$Screenshot}
+
+    if($Passthru -or $Script:PassThruByDefault) { $Screenshot }
 }
 
 function Get-SeWindow {
@@ -1096,7 +1121,7 @@ function Clear-SeAlert {
     if (-not $PSBoundParameters.ContainsKey('Action') -and
         $MyInvocation.InvocationName -match 'Accept') {$Action = 'Accept'}
     if ($Alert) {$alert.$action() }
-    if ($PassThru) {$Alert}
+    if ($PassThru -or $Script:PassThruByDefault) { $Alert }
 }
 
 function SeOpen {
@@ -1161,10 +1186,11 @@ function SeType {
 
         if($Submit)       {$Element.Submit()}
         if($SleepSeconds) {Start-Sleep -Seconds $SleepSeconds}
-        if($PassThru)     {$Element}
+        if($PassThru -or $Script:PassThruByDefault) { $Element }
     }
 }
 
+# May need to consider dropping -PassThru for this function, as only one type should come out of -PassThru
 function Get-SeSelectionOption {
     [Alias('SeSelection')]
     [cmdletbinding(DefaultParameterSetName='default')]
@@ -1236,7 +1262,7 @@ function Get-SeSelectionOption {
         elseif ($Clear)                 {[SeleniumSelection.Option]::DeselectAll($Element) }
         if ($IsMultiSelect)      {return [SeleniumSelection.Option]::IsMultiSelect($Element)
         }
-        if ($PassThru -and ($GetAllSelected -or $GetAllSelected)) {
+        if (  ($PassThru -or $Script:PassThruByDefault) -and ($GetAllSelected -or $GetAllSelected)  ) {
             Write-Warning -Message "-Passthru option ignored because other values are returned"
         }
         if ($GetSelected)        {return [SeleniumSelection.Option]::GetSelectedOption($Element).text
@@ -1246,7 +1272,7 @@ function Get-SeSelectionOption {
         if ($PSCmdlet.ParameterSetName -eq 'default') {
             [SeleniumSelection.Option]::GetOptions($Element) | Select-Object -ExpandProperty Text
         }
-        elseif ($PassThru) {$Element}
+        elseif ($PassThru -or $Script:PassThruByDefault) { $Element }
     }
     catch {
         throw "An error occured checking the selection box, the message was:`r`n    $($_.exception.message)"
@@ -1385,7 +1411,7 @@ function SeShouldHave {
             elseif($value -and -not (applyTest -testitems $a.text -operator $Operator -value $value)) {
                 throw (expandErr  "Alert text was $($a.text). The comparison '-$operator $value' failed.")
             }
-            elseif($PassThru) {return $a}
+            elseif($PassThru -or $Script:PassThruByDefault) {return $a}
         }
         else   {
             foreach ($s in $Selection) {
@@ -1404,8 +1430,8 @@ function SeShouldHave {
         }
     }
     end     {
-        if    ($PSCmdlet.ParameterSetName -eq "DefaultPS" -and $PassThru) {return $e}
-        elseif($PSCmdlet.ParameterSetName -eq "DefaultPS")                {return }
+        if    (  $PSCmdlet.ParameterSetName -eq "DefaultPS" -and ($PassThru -or $Script:PassThruByDefault)  ) { return $e }
+        elseif(  $PSCmdlet.ParameterSetName -eq "DefaultPS")                {return } #superfluous?
         else {
             foreach ($e in $foundElements) {
                 switch ($with) {
@@ -1425,7 +1451,7 @@ function SeShouldHave {
                 }
                 if (applyTest -testitems $testItem -operator $Operator -value $Value) {
                     $Success = $true
-                    if ($PassThru) {$e}
+                    if ($PassThru -or $Script:PassThruByDefault) { $e }
                 }
             }
             if (-not $Success) {

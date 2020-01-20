@@ -100,7 +100,11 @@ New-SeScreenShot: **New Function** with alias SeScreenshot. Merges functionality
    "Target" with alias "Driver", can come from $Global:SeDriver
    and throws an error if no driver passed or found from Global var
 
-Open-SeURL *New Function** with alias SeNavigate
+Enable-PassThru **New Function**
+Disable-PassThru **New Function**
+  Enable/Disables the use of PassThru by default with functions in the module that support -PassThru
+
+Open-SeURL **New Function** with alias SeNavigate
   Url is first on the commandline and mandatory
   Driver is renamed target, with alias "Driver", and will come from $Global:SeDriver
   Throws an error if no driver passed or found from Global var
