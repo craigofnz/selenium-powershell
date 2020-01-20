@@ -26,6 +26,8 @@ FunctionsToExport    = @(
     'Start-SeNewEdge',
     'Start-SeRemote' ,
     'Stop-SeDriver' ,
+    'Enable-PassThru',
+    'Disable-PassThru',
     'Invoke-SeClick' ,
     'Send-SeClick' ,
     'Get-SeCookie' ,
