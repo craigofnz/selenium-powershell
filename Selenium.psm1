@@ -1439,3 +1439,117 @@ function SeShouldHave {
         }
     }
 }
+
+
+
+
+
+
+function Select-SeWindow
+{
+    <#
+    .SYNOPSIS
+    Selects a window given a specified title search scheme
+    .DESCRIPTION
+    Selects a window given a specified title search scheme
+    Iterates through <IWebDriver>$Target window handles until it can find a window where the string fragment described in $Title can be matched by the
+    search scheme descibed in $FindBy.
+    .EXAMPLE
+    $TeamsAppDriver | Select-SeWindow -Title " | Microsoft Teams" -EndsWith -WaitHtml    
+    .EXAMPLE
+    Select-SeWindow -Target $TeamsAppDriver -Title "Microsoft Teams Notification" -Equals -Verbose
+    .NOTES
+    If this proves useful, we should PR it to the selenium-powershell project.
+    #>
+
+    [CmdLetBinding()]
+    param(
+        [Parameter(Mandatory=$false, ValueFromPipeline=$true)]
+        [Alias('Driver')]
+        [OpenQA.Selenium.IWebDriver]
+        $Target = $Global:SeDriver,
+
+        [Parameter(Mandatory=$true)]
+        [ValidateNotNull()]
+        [string]
+        $Title,
+
+        [Parameter(ParameterSetName = 'Contains')]
+        [switch]
+        $Contains,
+
+        [Parameter(ParameterSetName = 'EndsWith')]
+        [switch]
+        $EndsWith,
+
+        [Parameter(ParameterSetName = 'Equals')]
+        [switch]
+        $Equals,
+
+        [Parameter(ParameterSetName = 'Matches')]
+        [switch]
+        $Matches,
+
+        [Parameter(ParameterSetName = 'StartsWith')]
+        [switch]
+        $StartsWith,
+
+        [Parameter()]
+        [switch]
+        $WaitHtml
+    )
+
+    function test_titlematch
+    {
+        param($DriverTitle,$FindBy,$Title)
+
+        switch($FindBy)
+        {
+            'Equals'       {  $DriverTitle -eq $Title         } 
+            'EndsWith'     {  $DriverTitle.EndsWith($Title)   }
+            'StartsWith'   {  $DriverTitle.StartsWith($Title) }
+            'Contains'     {  $DriverTitle.Contains($Title)   }
+            'Matches'      {  $DriverTitle -match $Title      }
+        } 
+    }
+
+    $startWindowHandle = $Target.CurrentWindowHandle
+    Write-Verbose "$($MyInvocation.MyCommand): StartWindowHandle = $startWindowHandle : '$($Target.Title)'"
+
+    foreach (  $handle in (Get-SeWindow -Target $Target)  )
+    {
+        Write-Verbose "$($MyInvocation.MyCommand): WindowHandle = $handle"
+
+        if (  ($Target.Title) -and (test_titlematch -DriverTitle $Target.Title -Title $Title -FindBy $PSCmdlet.ParameterSetName)  )
+        {
+            break
+        }
+
+        Write-Verbose "$($MyInvocation.MyCommand): Window '$($Target.Title)' did not match '$Title' using $($PSCmdlet.ParameterSetName)" -ErrorAction SilentlyContinue
+        if ($handle -ne $Target.CurrentWindowHandle)
+        {
+            Switch-SeWindow -Target $Target -Window $handle
+        }
+        else
+        {
+            Write-Verbose "$($MyInvocation.MyCommand): Skipped switching to Window '$handle' from Window '$($Target.CurrentWindowHandle)'"
+        }
+
+        if ($WaitHtml)
+        {
+            $Target | Find-SeElement -TagName 'html' -Wait | Out-Null 
+        }
+    }
+
+    if (-not  (test_titlematch -DriverTitle $Target.Title -Title $Title -FindBy $PSCmdlet.ParameterSetName)  )
+    {
+        Write-Warning "$($MyInvocation.MyCommand): Switching back to WindowHandle $startWindowHandle"
+        $Target | Switch-SeWindow -Window $startWindowHandle
+        throw "$($MyInvocation.MyCommand): Failed to locate window.`nCould not match '$Title' using $($PSCmdlet.ParameterSetName)"
+    }
+    else 
+    {
+        Write-Verbose "$($MyInvocation.MyCommand): Found window '$($Target.Title)' matching '$Title' using $($PSCmdlet.ParameterSetName)"
+        $Target.CurrentWindowHandle
+    }
+}

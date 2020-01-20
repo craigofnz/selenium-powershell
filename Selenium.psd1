@@ -42,6 +42,7 @@ FunctionsToExport    = @(
     'Invoke-SeScreenshot' ,
     'Open-SeUrl' ,
     'Get-SeWindow' ,
+    'Select-SeWindow',
     'Switch-SeWindow',
     'Switch-SeFrame',
     'Clear-SeAlert',
