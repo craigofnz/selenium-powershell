@@ -1038,8 +1038,7 @@ function Switch-SeFrame {
 
         [Parameter(ValueFromPipeline=$true)]
         [Alias("Driver")]
-       # [ValidateIsWebDriverAttribute()]
-        [OpenQA.Selenium.IWebDriver]
+        [ValidateIsWebDriverAttribute()]
         $Target = $Global:SeDriver
     )
     
