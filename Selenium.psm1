@@ -1024,8 +1024,9 @@ function Switch-SeWindow {
 
 function Switch-SeFrame {
     [Alias('SeFrame')]
+    [CmdletBinding(DefaultParameterSetName='Frame')]
     param (
-        [Parameter(Mandatory = $true, ParameterSetName='Frame')]
+        [Parameter(Mandatory = $true, ParameterSetName='Frame', Position=0)]
         $Frame,
 
         [Parameter(Mandatory = $true, ParameterSetName='Parent')]
@@ -1037,7 +1038,8 @@ function Switch-SeFrame {
 
         [Parameter(ValueFromPipeline=$true)]
         [Alias("Driver")]
-        [ValidateIsWebDriverAttribute()]
+       # [ValidateIsWebDriverAttribute()]
+        [OpenQA.Selenium.IWebDriver]
         $Target = $Global:SeDriver
     )
     
