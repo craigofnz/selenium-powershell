@@ -1424,9 +1424,9 @@ function Select-SeWindow
     .DESCRIPTION
     Selects a window given a specified title search scheme
     Iterates through <IWebDriver>$Target window handles until it can find a window where the string fragment described in $Title can be matched by the
-    search scheme descibed in $FindBy.
+    search scheme selected.
     .EXAMPLE
-    $TeamsAppDriver | Select-SeWindow -Title " | Microsoft Teams" -EndsWith -WaitHtml    
+    $TeamsAppDriver | Select-SeWindow -Title " | Microsoft Teams" -EndsWith
     .EXAMPLE
     Select-SeWindow -Target $TeamsAppDriver -Title "Microsoft Teams Notification" -Equals -Verbose
     .NOTES
