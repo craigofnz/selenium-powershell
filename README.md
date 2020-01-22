@@ -17,13 +17,18 @@ In general, both my changes and experiments are drafted from [master](https://gi
 
 | Feature               | [fork/3/](https://github.com/craigofnz/selenium-powershell.git)       | PR         | [master](https://github.com/adamdriscoll/selenium-powershell.git) |
 | --------------------- | ------------ | ---------- | --------- |
-| Powershell Pipelining | Integrated   | 2020-01-20 | _Pending_ |
+| Powershell Pipelining | Integrated   | [2020-01-20](https://github.com/adamdriscoll/selenium-powershell/pull/62) | 2020-01-22|
 | GetAttributes         | Integrated   |            |           |
 | Select-SeWindow       | Integrated   |            |           | 
 | PassThru Defaults     | _In Progress_|            |           |
 | Select-SeFrame        | Not Started  |            |           |
-| WinAppDriver          | Not Started  |            |           |
+| WinAppDriver          | _In Progress_|            |           |
 | SHiPS                 | Not Started  |            |           |
+
+
+| Bugfix               | [fork/3/](https://github.com/craigofnz/selenium-powershell.git)       | PR         | [master](https://github.com/adamdriscoll/selenium-powershell.git) |
+| --------------------- | ------------ | ---------- | --------- |
+| [Switch-SeFrame](https://github.com/craigofnz/selenium-powershell/tree/pr/testsfix.switch-seframe)  | Integrated   | [2020-01-22](https://github.com/adamdriscoll/selenium-powershell/pull/64) | _Pending_ |
 
 
 
