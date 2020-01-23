@@ -28,7 +28,7 @@ In general, both my changes and experiments are drafted from [master](https://gi
 
 | Bugfix               | [fork/3/](https://github.com/craigofnz/selenium-powershell.git)       | PR         | [master](https://github.com/adamdriscoll/selenium-powershell.git) |
 | --------------------- | ------------ | ---------- | --------- |
-| [Switch-SeFrame](https://github.com/craigofnz/selenium-powershell/tree/pr/testsfix.switch-seframe)  | Integrated   | [2020-01-22](https://github.com/adamdriscoll/selenium-powershell/pull/64) | _Pending_ |
+| [Switch-SeFrame](https://github.com/craigofnz/selenium-powershell/tree/pr/testsfix.switch-seframe)  | Integrated   | [2020-01-22](https://github.com/adamdriscoll/selenium-powershell/pull/64) | 2020-01-23 |
 
 
 
