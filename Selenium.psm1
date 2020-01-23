@@ -511,6 +511,143 @@ function Start-SeRemote {
         else {$Driver}
     }
 
+    function Start-SeWindowsApp {
+        [cmdletbinding(DefaultParameterSetName='default')]
+        [Alias('SeChrome')]
+        param(
+            [ValidateURIAttribute()]
+            [Parameter(Position=0)]
+            [string]$StartURL,
+            [Parameter(Mandatory = $false)]
+            [array]$Arguments,
+            [switch]$HideVersionHint,
+            [System.IO.FileInfo]$DefaultDownloadPath,
+            [System.IO.FileInfo]$ProfileDirectoryPath,
+            [Parameter(DontShow)]
+            [bool]$DisableBuiltInPDFViewer=$true,
+            [switch]$EnablePDFViewer,
+            [Alias('PrivateBrowsing')]
+            [switch]$Incognito,
+            [parameter(ParameterSetName='hl',  Mandatory=$true)]
+            [switch]$Headless,
+            [parameter(ParameterSetName='Min',Mandatory=$true)]
+            [switch]$Maximized,
+            [parameter(ParameterSetName='Max',Mandatory=$true)]
+            [switch]$Minimized,
+            [parameter(ParameterSetName='Ful',Mandatory=$true)]
+            [switch]$Fullscreen,
+            [Alias('ChromeBinaryPath')]
+            $BinaryPath,
+            $WebDriverDirectory = "${ENV:ProgramFiles(x86)}\Windows Application Driver",
+            [switch]$Quiet,
+            [switch]$AsDefaultDriver,
+            [int]$ImplicitWait = 10
+        )
+
+        begin
+        {
+            # Exists
+            if (  -not (Test-Path -Path "$WebDriverDirectory\WinAppDriver.exe" -PathType Leaf)  )
+            {
+                throw "Could not find driver at path $WebDriverDirectory\WinAppDriver.exe"
+            }
+
+            # Windows 10
+            if (  -not (([environment]::OSVersion.Version.Major -eq 10) -and ([environment]::OSVersion.VersionString -match '^Microsoft Windows NT 10\.'))  )
+            {
+                throw "Incompatible operating system"
+            }
+
+            # Developer Mode
+            if (  -not ((Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -Name 'AllowDevelopmentWithoutDevLicense' -ErrorAction SilentlyContinue) -eq 1)  )
+            {
+                throw "Windows Developer Mode must be enabled"
+            }
+        }
+    
+        process {
+            #region chrome set-up options
+            $Chrome_Options = New-Object -TypeName "OpenQA.Selenium.Chrome.ChromeOptions"
+    
+            if($DefaultDownloadPath){
+                Write-Verbose "Setting Default Download directory: $DefaultDownloadPath"
+                $Chrome_Options.AddUserProfilePreference('download', @{'default_directory' = $($DefaultDownloadPath.FullName); 'prompt_for_download' = $false; })
+            }
+    
+            if($ProfileDirectoryPath){
+                Write-Verbose "Setting Profile directory: $ProfileDirectoryPath"
+                $Chrome_Options.AddArgument("user-data-dir=$ProfileDirectoryPath")
+            }
+    
+            if($BinaryPath){
+                Write-Verbose "Setting Chrome Binary directory: $BinaryPath"
+                $Chrome_Options.BinaryLocation ="$BinaryPath"
+            }
+    
+            if($DisableBuiltInPDFViewer -and -not $EnablePDFViewer){
+                $Chrome_Options.AddUserProfilePreference('plugins', @{'always_open_pdf_externally' =  $true;})
+            }
+    
+            if($Headless){
+                $Chrome_Options.AddArguments('headless')
+            }
+    
+            if($Incognito){
+                $Chrome_Options.AddArguments('Incognito')
+            }
+    
+            if($Maximized){
+                $Chrome_Options.AddArguments('start-maximized')
+            }
+    
+            if($Fullscreen){
+                $Chrome_Options.AddArguments('start-fullscreen')
+            }
+    
+            if($Arguments){
+                foreach ($Argument in $Arguments){
+                    $Chrome_Options.AddArguments($Argument)
+                }
+            }
+    
+            if(!$HideVersionHint){
+                Write-Verbose "Download the right chromedriver from 'http://chromedriver.chromium.org/downloads'"
+            }
+    
+            if($WebDriverDirectory) {$service = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService($WebDriverDirectory)}
+            elseif($AssembliesPath) {$service = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService($AssembliesPath)}
+            else                    {$service = [OpenQA.Selenium.Chrome.ChromeDriverService]::CreateDefaultService()}
+            if ($Quiet)             {$service.HideCommandPromptWindow = $true}
+            #endregionmkdir p
+    
+            $Driver = New-Object -TypeName "OpenQA.Selenium.Chrome.ChromeDriver" -ArgumentList $service,$Chrome_Options
+            if(-not $Driver)        {Write-Warning "Web driver was not created"; return}
+    
+            #region post creation options
+            $Driver.Manage().Timeouts().ImplicitWait = [TimeSpan]::FromSeconds($ImplicitWait)
+    
+            if($Minimized){
+                $Driver.Manage().Window.Minimize();
+            }
+    
+            if($Headless -and $DefaultDownloadPath){
+                $HeadlessDownloadParams = New-Object 'system.collections.generic.dictionary[[System.String],[System.Object]]]'
+                $HeadlessDownloadParams.Add('behavior', 'allow')
+                $HeadlessDownloadParams.Add('downloadPath', $DefaultDownloadPath.FullName)
+                $Driver.ExecuteChromeCommand('Page.setDownloadBehavior', $HeadlessDownloadParams)
+            }
+    
+            if($StartURL) {$Driver.Navigate().GoToUrl($StartURL)}
+            #endregion
+    
+            if($AsDefaultDriver) {
+                if($Global:SeDriver) {$Global:SeDriver.Dispose()}
+                $Global:SeDriver = $Driver
+            }
+            else {$Driver}
+        }
+    }
+
 function Stop-SeDriver {
     [alias('SeClose')]
     param(
